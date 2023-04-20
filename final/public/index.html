@@ -35,6 +35,7 @@
             <p class="subtitle is-5">
               <strong>{{numeroBots}}</strong> bot
             </p>
+            <p style="margin-left:2%;" class="subtitle is-5">Benvenuto: <small>{{account}}</small></p>
           </div>
         </div>
 
@@ -46,6 +47,7 @@
               <p class="modal-card-title">Dettaglio Bot</p>
             </header>
             <div class="modal-card-body">
+              <p><strong>Proprietario: </strong>{{selectedBot.owner}}</p>
                <p><strong>ID: </strong> {{selectedBot.id}}</p>
                <p><strong>Accessori: </strong>
                 <ul>
@@ -64,6 +66,9 @@
 
         <!-- Right side -->
         <div class="level-right">
+          <p class="level-item"><a class="button is-info" @click="getAllBots">Lista di tutti i Bot</a></p>
+          <p class="level-item"><a class="button is-link" @click="getMyBots">I miei bot</a></p>
+          <p class="level-item"><a class="button is-warning" @click="getOtherBots">I bot degli altri</a></p>
           <p class="level-item"><a class="button is-success" @click="mintBot">Nuovo Bot</a></p>
         </div>
       </nav>
@@ -102,7 +107,7 @@
   <!-- Qui sarà contenuta tutta la logica della nostra applicazione -->
   <script type="module">
     import { switchToReplitTestnet, ABIcode, address } from './helpers/blockchain.js'
-    import { getBotIds, getBotDetail, createBot } from './helpers/bots.js'
+    import { getBotIds, getBotDetail, createBot, getAllBotIds } from './helpers/bots.js'
     import { createSVGBot } from './helpers/svg.js'
     const { createApp } = Vue
 
@@ -131,6 +136,8 @@
             let ids = await  getBotIds(this.contract, this.account)
             console.log("Indici: " + ids)
 
+            this.bots = []
+
             for (let i = ids.length-1; i >=0; i--) {
               let bot = await getBotDetail(this.contract, ids[i])
               bot.id = ids[i]
@@ -151,6 +158,69 @@
           }
 
         },
+
+        async getOtherBots(){
+          try {
+            this.loading = true
+
+            this.bots = []
+            let ids = await getAllBotIds(this.contract)
+            console.log("indici: " + ids)
+
+            
+
+            for (let i = ids.length-1; i >0; i--) {
+              let bot = await getBotDetail(this.contract, ids[i])
+              bot.id = ids[i]
+              if (bot.owner.toLowerCase() == this.account.toLowerCase()){
+                continue
+              }
+              this.bots.push(bot)
+            }
+
+            for (let i = 0; i< this.bots.length; i++){
+              let svgBot = await createSVGBot(this.bots[i])
+              this.bots[i].svgContent = svgBot.outerHTML
+
+            }
+
+            this.loading = false
+            
+          }
+          catch(err){
+            console.log(err)
+          }
+
+        },
+        
+        async getAllBots(){
+          try {
+            this.loading = true
+
+            this.bots = []
+            let ids = await getAllBotIds(this.contract)
+            console.log("indici: " + ids)
+
+            
+
+            for (let i = ids.length-1; i >0; i--) {
+              let bot = await getBotDetail(this.contract, ids[i])
+              bot.id = ids[i]
+              this.bots.push(bot)
+            }
+
+            for (let i = 0; i< this.bots.length; i++){
+              let svgBot = await createSVGBot(this.bots[i])
+              this.bots[i].svgContent = svgBot.outerHTML
+
+            }
+
+            this.loading = false
+          } catch(err){
+            console.log(err)
+          }
+        },
+        
         async mintBot() {
           //await createBot(this.web3, this.contract);
           //this.getMyBots()
@@ -182,13 +252,13 @@
             
         */
         if (window.ethereum) {
-          await window.ethereum.request({ method: 'eth_accounts' });
+          const accounts = await ethereum.request({ method: 'eth_accounts' });
+          this.account = accounts[0]
           this.web3 = new Web3(window.ethereum);
           switchToReplitTestnet()
           this.contract = new this.web3.eth.Contract(ABIcode, address)
           /* Ottiene l'indirizzo dell'utente e lo salva nello stato dell'applicazione */
-	        const accounts = await ethereum.request({ method: 'eth_accounts' });
-          this.account = accounts[0]
+	        
 
           /* ottiene i bot posseduti */
           this.getMyBots()

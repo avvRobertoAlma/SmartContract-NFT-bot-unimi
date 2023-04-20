@@ -12,10 +12,21 @@ export async function getBotIds(contract, account){
 	return ids
 }
 
+export async function getAllBotIds(contract){
+	/* Ottiene il numero totale dei bot esistenti */
+	let total = await contract.methods.tokenCounter().call()
+	let ids = []
+	for (let i=0; i<total-1;i++){
+		ids.push(i)
+	}
+	return ids
+}
+
 export async function getBotDetail(contract, id){
 	let bot = {}
 	bot.colors = await contract.methods.botColors(id).call()
 	bot.accessories = await contract.methods.botAccessories(id).call()
+	bot.owner = await contract.methods.ownerOf(id).call()
     console.log(bot)
 	return bot
 }
