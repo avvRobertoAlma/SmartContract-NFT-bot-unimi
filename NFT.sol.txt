@@ -1,0 +1,635 @@
+// // SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.8;
+// https://replbots--ritza.repl.co/
+
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+
+contract ReplBots is ERC721Enumerable {
+
+    // definire che tutte le string del contratto utilizzino la librearia Strings
+    using Strings for uint8;
+
+    // definiamo una variabile state che tenga traccia del tokenID
+    uint256 public tokenCounter = 1;
+
+    // Arrays raeltivi agli accesory del robot
+    string[] private headgear = [
+        "Cowboy Hat",
+        "Fro",
+        "Baseball Cap",
+        "Viking Helmet"
+    ];
+
+    string[] private eargear = [
+        "Bunny Ears",
+        "Headphones"
+    ];
+
+    string[] private facegear = [
+        "Sunglasses",
+        "Moustache",
+        "Nose",
+        "DOOM Mask"
+    ];
+
+        struct Color {
+        uint8 red;
+        uint8 green;
+        uint8 blue;
+    }
+
+        struct ReplBot {
+        Color frame;
+        Color visor;
+        Color background;
+        uint8 head;
+        uint8 ears;
+        uint8 face;
+    }
+
+
+    mapping (uint => ReplBot) private replbots;
+
+    // constructor che richiama un constructor all'interno dello standard importato e definisce nome e simbolo del nostro token
+    constructor() ERC721("ReplBots", "RBNFT") {
+    }
+
+    // funzione che abilita il minting
+    function mint(address recipient) public returns (uint256) {
+        // Get ID and increment counter
+        uint tokenId = tokenCounter;
+        tokenCounter++;
+
+        // determinare i colori
+        // colore telaio
+        Color memory frameCol = Color(
+            uint8(_random(tokenId, "legaltech") % 255),
+            uint8(_random(tokenId, "...") % 255),
+            uint8(_random(tokenId, "--_--_") % 255)
+        );
+        // colore visore
+        Color memory visorCol = Color(
+            uint8(_random(tokenId, "shfnfj") % 255),
+            uint8(_random(tokenId, "?!!!?") % 255),
+            uint8(_random(tokenId, "sjcmng") % 255)
+        );
+        // colore background
+        Color memory backgroundCol = Color(
+            uint8(_random(tokenId, "shfnfj") % 255),
+            uint8(_random(tokenId, "?!!!?") % 255),
+            uint8(_random(tokenId, "sjcmng") % 255)
+        );
+
+        // Determinare gli accessori
+        uint8 headIdx = uint8(_random(tokenId, "skjf7") % headgear.length);
+        uint8 earIdx = uint8(_random(tokenId, "?!?!") % eargear.length);
+        uint8 faceIdx = uint8(_random(tokenId, "7shdk") % facegear.length);
+
+        // Creare il replbot
+        replbots[tokenId] = ReplBot(frameCol, visorCol, backgroundCol, headIdx, earIdx, faceIdx);
+
+        // token mintato
+        _safeMint(recipient, tokenId);
+        return tokenId;
+    }
+
+    // funzione di scelta casuale che ci restituisce un numero
+    function _random(uint tokenId, string memory input) internal view returns (uint256) {
+        // creazione del primo elemento di quattro per la creazione della scelta casuale
+        bytes32 blckhash = blockhash(block.number -1);
+        return uint256(keccak256(abi.encodePacked(blckhash, block.difficulty, tokenId, abi.encodePacked(input))));
+    }
+
+
+    // visualizzazione caratteristiche robot: accessori
+    function botAccessories(uint256 tokenId) public view returns (string memory, string memory, string memory) {
+        // verifica che il token non fungibile (NFT) esista
+        require(_exists(tokenId), "ReplBots: Query for nonexistent token");
+
+        ReplBot memory bot = replbots[tokenId];
+
+        return (headgear[bot.head], eargear[bot.ears], facegear[bot.face]);
+    }
+
+        function botColors(uint256 tokenId) public view returns (string memory, string memory, string memory) {
+        require(_exists(tokenId), "ReplBots: Query for nonexistent token");
+
+        ReplBot memory bot = replbots[tokenId];
+
+        return (_colorToString(bot.frame),
+               _colorToString(bot.visor),
+               _colorToString(bot.background));
+    
+    }
+
+        // funzione di traduzion e concatenamento
+        function _colorToString(Color memory color) internal pure returns (string memory) {
+            string[7] memory parts;
+
+            parts = ["(",
+                    color.red.toString(),
+                    ",",
+                    color.blue.toString(),
+                    ",",
+                    color.green.toString(),
+                    ")"];
+
+            return string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
+        
+        }
+    
+}
+
+
+
+// address
+// 0x4B2d52A35eB68dE46Ba718fD1f9f7144D1850742
+
+//ABI code
+/*
+
+[
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "approved",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "approved",
+				"type": "bool"
+			}
+		],
+		"name": "ApprovalForAll",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			}
+		],
+		"name": "mint",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "data",
+				"type": "bytes"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "approved",
+				"type": "bool"
+			}
+		],
+		"name": "setApprovalForAll",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "botAccessories",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "botColors",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "getApproved",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			}
+		],
+		"name": "isApprovedForAll",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ownerOf",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenByIndex",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "tokenCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenOfOwnerByIndex",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenURI",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+
+*/

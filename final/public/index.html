@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repl BOT</title>
+
+  <!-- Foglio di stile per Bulma -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+  <!-- Script di Web3.js serve per interfacciarsi con la blockchain -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7/web3.min.js"></script>
+
+  <!-- Script di Vue.js serve per gestire il frontend -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.47/vue.global.min.js"></script>
+
+  <!-- entry point della nostra applicazione -->
+  <div id="app">
+    <section class="section hero is-primary">
+      <h1 class="title is-centered">
+        NFT Tutorial
+      </h1>
+      <h2 class="subtitle is-centered">
+        Avv. Roberto Alma
+      </h2>
+    </section>
+    <section class="section">
+      <!-- Main container -->
+      <nav class="level">
+        <!-- Left side -->
+        <div class="level-left">
+          <div class="level-item">
+            <p class="subtitle is-5">
+              <strong>{{numeroBots}}</strong> bot
+            </p>
+          </div>
+        </div>
+
+        <!-- modale con informazioni sul bot -->
+        <div class="modal" :class="{'is-active': isActiveModal}" v-if="selectedBot">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Dettaglio Bot</p>
+            </header>
+            <div class="modal-card-body">
+               <p><strong>ID: </strong> {{selectedBot.id}}</p>
+               <p><strong>Accessori: </strong>
+                <ul>
+                  <li v-for="a in selectedBot.accessories">{{a}}</li>
+                </ul>
+              </p>
+            </div>
+
+            <footer class="modal-card-foot">
+              <button @click="closeModal" class="button">Chiudi</button>
+              </footer>
+          </div>
+          
+          <button class="modal-close is-large" @click="closeModal" aria-label="close"></button>
+        </div>
+
+        <!-- Right side -->
+        <div class="level-right">
+          <p class="level-item"><a class="button is-success" @click="mintBot">Nuovo Bot</a></p>
+        </div>
+      </nav>
+
+      <div class="container" v-if="loading">
+        Caricamento dei bot in corso....
+      </div>
+
+      <div class="container" id="bots-container" v-if="numeroBots > 0 && !loading">
+        <g v-for="(bot, index) in bots" v-html="bot.svgContent" @click="showBotDetail(index)"></g>
+      </div>
+    </section>
+
+  </div>
+
+
+  <style>
+    #bots-container {
+      display:flex;
+      flex-wrap: wrap;
+    }
+
+    #bots-container svg {
+      width: 25em;
+      margin:0.5em;
+    }
+
+    #bots-container svg:hover {
+      cursor:pointer;
+      background:rgba(0,0,0,0.6);
+      opacity:0.5;
+    }
+
+  </style>
+
+  <!-- Qui sarà contenuta tutta la logica della nostra applicazione -->
+  <script type="module">
+    import { switchToReplitTestnet, ABIcode, address } from './helpers/blockchain.js'
+    import { getBotIds, getBotDetail, createBot } from './helpers/bots.js'
+    import { createSVGBot } from './helpers/svg.js'
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          message: 'Hello Vue!',
+          contract: {},
+          bots: [],
+          loading:true,
+          web3: null,
+          account:null,
+          isActiveModal:false,
+          selectedBot:null
+        }
+      },
+      computed: {
+        numeroBots() {
+          return this.bots.length
+        }
+      },
+      methods: {
+        async getMyBots() {
+          try {
+            this.loading = true
+            let ids = await  getBotIds(this.contract, this.account)
+            console.log("Indici: " + ids)
+
+            for (let i = ids.length-1; i >=0; i--) {
+              let bot = await getBotDetail(this.contract, ids[i])
+              bot.id = ids[i]
+              this.bots.push(bot)
+            }
+
+            for (let i = 0; i< this.bots.length; i++){
+              let svgBot = await createSVGBot(this.bots[i])
+              this.bots[i].svgContent = svgBot.outerHTML
+
+            }
+
+            this.loading = false
+
+
+          } catch (err) {
+            console.log(err)
+          }
+
+        },
+        async mintBot() {
+          //await createBot(this.web3, this.contract);
+          //this.getMyBots()
+          try {
+            this.bots = []
+            /* Ottiene l'indirizzo dell'utente */
+            // Mint to own address
+            await this.contract.methods.mint(this.account).send({ from: this.account });
+            /* ottiene i bot posseduti */
+            this.bots = []
+            this.getMyBots()
+          } catch (err) {
+            console.log(err)
+          }
+
+        },
+        showBotDetail(index){
+          this.selectedBot = this.bots[index];
+          this.isActiveModal = true
+        },
+        closeModal(){
+          this.isActiveModal = false
+        }
+      },
+      async mounted() {
+        /* 
+            questo metodo viene invocato nel momento in cui il componente di Vue viene "montato" sul DOM 
+            Usiamo la parola chiave async perché dobbiamo scrivere codice asincrono
+            
+        */
+        if (window.ethereum) {
+          await window.ethereum.request({ method: 'eth_accounts' });
+          this.web3 = new Web3(window.ethereum);
+          switchToReplitTestnet()
+          this.contract = new this.web3.eth.Contract(ABIcode, address)
+          /* Ottiene l'indirizzo dell'utente e lo salva nello stato dell'applicazione */
+	        const accounts = await ethereum.request({ method: 'eth_accounts' });
+          this.account = accounts[0]
+
+          /* ottiene i bot posseduti */
+          this.getMyBots()
+        
+
+        }
+
+      }
+    }).mount('#app')
+  </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
