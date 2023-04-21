@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repl BOT</title>
+
+  <!-- Foglio di stile per Bulma -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+  <!-- Script di Web3.js serve per interfacciarsi con la blockchain -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7/web3.min.js"></script>
+
+  <!-- Script di Vue.js serve per gestire il frontend -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.47/vue.global.min.js"></script>
+
+  <!-- entry point della nostra applicazione -->
+  <div id="app">
+
+  </div>
+
+
+  <style>
+    #bots-container {
+      display:flex;
+      flex-wrap: wrap;
+    }
+
+    #bots-container svg {
+      width: 25em;
+      margin:0.5em;
+    }
+
+    #bots-container svg:hover {
+      cursor:pointer;
+      background:rgba(0,0,0,0.6);
+      opacity:0.5;
+    }
+
+  </style>
+
+  <!-- Qui sarà contenuta tutta la logica della nostra applicazione -->
+  <script type="module">
+    import { switchToReplitTestnet, ABIcode, address } from './helpers/blockchain.js'
+    import { createSVGBot } from './helpers/svg.js'
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+        }
+      },
+      computed: {
+      },
+      methods: {
+      },
+      async mounted() {
+        /* 
+            questo metodo viene invocato nel momento in cui il componente di Vue viene "montato" sul DOM 
+            Usiamo la parola chiave async perché dobbiamo scrivere codice asincrono
+            
+        */
+
+
+      }
+    }).mount('#app')
+  </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
