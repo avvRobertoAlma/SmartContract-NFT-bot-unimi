@@ -107,6 +107,7 @@
   <!-- Qui sarà contenuta tutta la logica della nostra applicazione -->
   <script type="module">
     import { switchToReplitTestnet, ABIcode, address } from './helpers/blockchain.js'
+    import { holder } from './helpers/botholderdatabase.js'
     import { getBotIds, getBotDetail, createBot, getAllBotIds } from './helpers/bots.js'
     import { createSVGBot } from './helpers/svg.js'
     const { createApp } = Vue
@@ -209,6 +210,8 @@
               this.bots.push(bot)
             }
 
+            console.log("[DEBUG] " + this.bots)
+
             for (let i = 0; i< this.bots.length; i++){
               let svgBot = await createSVGBot(this.bots[i])
               this.bots[i].svgContent = svgBot.outerHTML
@@ -239,6 +242,7 @@
         },
         showBotDetail(index){
           this.selectedBot = this.bots[index];
+          this.selectedBot.owner = holder(this.selectedBot.owner)
           this.isActiveModal = true
         },
         closeModal(){
@@ -252,7 +256,8 @@
             
         */
         if (window.ethereum) {
-          const accounts = await ethereum.request({ method: 'eth_accounts' });
+          const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+          console.log(accounts)
           this.account = accounts[0]
           this.web3 = new Web3(window.ethereum);
           switchToReplitTestnet()
